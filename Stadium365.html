@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1400, initial-scale=1">
+<title>Stadium365 — HPCA Dharamshala</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@300;400;500;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#EA5050;--black:#111111;--ink:#1C1C1C;--white:#ffffff;
+  --paper:#F7F7F7;--border:rgba(0,0,0,0.085);--muted:rgba(0,0,0,0.38);
+  --green:#22C55E;--amber:#F59E0B;
+  --font:'Schibsted Grotesk','Hanken Grotesk',system-ui,sans-serif;
+  --nb:'Hanken Grotesk',system-ui,sans-serif;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+html,body{height:100%;font-family:var(--font);color:var(--ink);background:var(--paper);font-size:13px;-webkit-font-smoothing:antialiased}
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* ── TOPBAR ── */
+#topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--black);height:52px;padding:0 20px;flex-shrink:0;
+}
+.nb-logo{display:flex;flex-direction:column;gap:2px;line-height:1;cursor:pointer}
+.nb-wm{font-family:var(--nb);font-weight:300;font-size:14px;color:#fff;letter-spacing:0.01em}
+.nb-sp{font-family:var(--font);font-weight:700;font-size:7px;color:#fff;letter-spacing:0.25em;text-transform:uppercase}
+.tb-div{width:1px;height:22px;background:rgba(255,255,255,0.12);margin:0 16px}
+.tb-product{font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em}
+.tb-product span{color:var(--red)}
+.tb-right{display:flex;align-items:center;gap:8px}
+.tb-venue{font-size:11px;font-weight:500;color:rgba(255,255,255,0.35);letter-spacing:0.04em;text-transform:uppercase}
+.tb-dot{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0}
+.tb-status{font-size:11px;font-weight:500;color:rgba(255,255,255,0.35)}
+
+/* ── KPI STRIP ── */
+#kpi-strip{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.kpi{padding:14px 22px;border-right:1px solid var(--border)}
+.kpi:last-child{border-right:none}
+.kpi-lbl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px}
+.kpi-num{font-size:27px;font-weight:600;color:var(--ink);letter-spacing:-0.03em;line-height:1}
+.kpi-num.red{color:var(--red)}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* ── MAIN LAYOUT ── */
+#main{display:flex;flex:1;overflow:hidden;min-height:0}
+
+/* ── SIDEBAR ── */
+#sidebar{
+  width:230px;background:var(--white);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;
+}
+.sb-head{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  font-size:10px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;
+  color:var(--muted);display:flex;align-items:center;justify-content:space-between;
+}
+.sb-overview{
+  font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;
+  letter-spacing:0.05em;text-transform:uppercase;
+}
+.sb-overview:hover{color:var(--ink)}
+
+.prod-row{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  border-bottom:1px solid var(--border);cursor:pointer;
+  transition:background 80ms var(--ease);
+}
+.prod-row:hover:not(.active){background:var(--paper)}
+.prod-row.active{background:var(--ink)}
+.prod-row.inactive .pc,.prod-row.inactive .pn,.prod-row.inactive .pr{opacity:.4}
+.pc{font-size:10px;font-weight:700;color:var(--muted);min-width:22px;letter-spacing:0.04em;flex-shrink:0}
+.prod-row.active .pc{color:var(--red)}
+.pn{font-size:12px;font-weight:500;color:var(--ink);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prod-row.active .pn{color:#fff}
+.pr{font-size:12px;font-weight:600;color:var(--ink);min-width:50px;text-align:right;flex-shrink:0}
+.prod-row.active .pr{color:rgba(255,255,255,0.9)}
+
+.tog{width:28px;height:16px;border-radius:8px;display:flex;align-items:center;padding:2px;cursor:pointer;flex-shrink:0;transition:background 150ms}
+.tog.on{background:var(--green)}
+.tog.off{background:rgba(0,0,0,0.15)}
+.prod-row.active .tog.off{background:rgba(255,255,255,0.2)}
+.togdot{width:12px;height:12px;border-radius:50%;background:#fff;transition:transform 150ms var(--ease)}
+.tog.on .togdot{transform:translateX(12px)}
+
+/* ── PANEL ── */
+#panel{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0}
+
+/* ── OVERVIEW ── */
+#overview{padding:28px 28px 40px;flex:1}
+.ov-section{margin-bottom:28px}
+.ov-title{font-size:10px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.bar-chart{display:flex;flex-direction:column;gap:7px}
+.bar-row{display:flex;align-items:center;gap:10px}
+.bar-code{font-size:10px;font-weight:700;color:var(--muted);min-width:24px;letter-spacing:0.04em}
+.bar-name{font-size:12px;font-weight:500;color:var(--ink);min-width:140px}
+.bar-track{flex:1;height:18px;background:var(--paper);border:1px solid var(--border);position:relative;overflow:hidden}
+.bar-fill{height:100%;background:var(--ink);transition:width 300ms var(--ease)}
+.bar-val{font-size:12px;font-weight:600;color:var(--ink);min-width:66px;text-align:right}
+.bar-off{color:var(--muted);font-weight:400}
+
+.yr-table{width:100%;border-collapse:collapse;border:1px solid var(--border)}
+.yr-table th{
+  background:var(--ink);color:#fff;font-size:10px;font-weight:600;
+  padding:9px 14px;text-align:right;letter-spacing:0.04em;text-transform:uppercase;
+}
+.yr-table th:first-child{text-align:left}
+.yr-table td{padding:9px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:500;text-align:right;color:var(--ink)}
+.yr-table td:first-child{text-align:left;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase}
+.yr-table tr.ebitda-row td{color:var(--red);font-weight:600}
+.yr-table tr.total-row td{background:var(--paper);font-weight:700;font-size:14px}
+.yr-table tr.total-row td:first-child{font-size:10px}
+
+/* ── PRODUCT DETAIL ── */
+#product-detail{flex:1;display:none;flex-direction:column;min-height:0}
+#product-detail.active{display:flex}
+
+.pd-head{
+  padding:18px 26px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;justify-content:space-between;
+  flex-shrink:0;background:var(--white);
+}
+.pd-left-head{flex:1}
+.pd-eyebrow{font-size:9px;font-weight:700;color:var(--red);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:5px}
+.pd-title{font-size:20px;font-weight:600;color:var(--ink);letter-spacing:-0.02em;line-height:1.15}
+.pd-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.pd-tog-area{display:flex;align-items:center;gap:9px;margin-top:2px}
+.pd-tog-lbl{font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted)}
+
+.pd-tog{width:38px;height:21px;border-radius:10px;display:flex;align-items:center;padding:3px;cursor:pointer;flex-shrink:0;transition:background 150ms}
+.pd-tog.on{background:var(--green)}
+.pd-tog.off{background:rgba(0,0,0,0.18)}
+.pd-togdot{width:15px;height:15px;border-radius:50%;background:#fff;transition:transform 150ms var(--ease)}
+.pd-tog.on .pd-togdot{transform:translateX(17px)}
+
+.pd-body{
+  display:grid;grid-template-columns:1fr 1fr;
+  flex:1;overflow:auto;min-height:0;
+}
+.pd-col{padding:20px 24px;overflow-y:auto}
+.pd-col.left{border-right:1px solid var(--border)}
+.col-title{font-size:10px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.sec-lbl{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border)}
+.sec-lbl:first-child{margin-top:0;border-top:none;padding-top:0}
+
+/* ── SLIDERS ── */
+.sl-group{margin-bottom:14px}
+.sl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sl-lbl{font-size:12px;font-weight:500;color:var(--ink);line-height:1.3}
+.sl-val{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;margin-left:8px}
+input[type=range]{
+  width:100%;height:2px;-webkit-appearance:none;appearance:none;
+  background:rgba(0,0,0,0.12);outline:none;cursor:pointer;display:block;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:#fff;border:2.5px solid var(--ink);cursor:pointer;
+  box-shadow:0 1px 3px rgba(0,0,0,0.15);
+}
+input[type=range]::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;background:#fff;
+  border:2.5px solid var(--ink);cursor:pointer;
+}
+input[type=range]:focus::-webkit-slider-thumb{border-color:var(--red)}
+
+/* ── OUTPUT CARDS ── */
+.out-grid{display:grid;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:14px}
+.out-grid.cols2{grid-template-columns:1fr 1fr}
+.out-grid.cols3{grid-template-columns:1fr 1fr 1fr}
+.oc{background:var(--white);padding:12px 14px}
+.oc.hero{background:var(--ink)}
+.oc-lbl{font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.oc.hero .oc-lbl{color:rgba(255,255,255,0.4)}
+.oc-num{font-size:21px;font-weight:600;color:var(--ink);letter-spacing:-0.025em;line-height:1}
+.oc.hero .oc-num{color:#fff}
+.oc-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.oc.hero .oc-sub{color:rgba(255,255,255,0.3)}
+
+/* ── 5-YEAR STRIP ── */
+.yr-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:14px}
+.yc{background:var(--white);padding:10px 11px}
+.yc.yr1{background:var(--ink)}
+.yc-lbl{font-size:9px;font-weight:600;letter-spacing:0.06em;color:var(--muted);margin-bottom:2px;text-transform:uppercase}
+.yc.yr1 .yc-lbl{color:rgba(255,255,255,0.4)}
+.yc-num{font-size:16px;font-weight:600;color:var(--ink);letter-spacing:-0.02em}
+.yc.yr1 .yc-num{color:#fff}
+.yc-ebitda{font-size:10px;color:var(--red);font-weight:600;margin-top:1px}
+.yc.yr1 .yc-ebitda{color:#ff8a8a}
+
+/* ── CAPEX BOX ── */
+.capex-row{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:14px}
+.cx{background:var(--paper);padding:11px 14px}
+.cx-lbl{font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.cx-num{font-size:19px;font-weight:600;color:var(--ink);letter-spacing:-0.025em}
+.cx-sub{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+/* ── FOOTER NAV ── */
+.pd-footer{
+  border-top:1px solid var(--border);padding:10px 26px;
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--paper);flex-shrink:0;
+}
+.pd-nav{font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:color 100ms;letter-spacing:0.01em}
+.pd-nav:hover{color:var(--ink)}
+.pd-hint{font-size:10px;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase}
+
+/* ── OFF STATE ── */
+.off-state{padding:48px 28px;text-align:center}
+.off-state h3{font-size:17px;font-weight:600;color:var(--ink);margin-bottom:8px;letter-spacing:-0.01em}
+.off-state p{font-size:13px;color:var(--muted);line-height:1.5;max-width:280px;margin:0 auto}
+
+/* ── NOTE ── */
+.note-box{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);padding:10px 14px;margin-bottom:14px}
+.note-box p{font-size:11px;color:#92400e;line-height:1.5}
+
+/* ── PRODUCT CARDS ── */
+.prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:28px}
+.prod-card{background:var(--white);padding:18px 18px 16px;cursor:pointer;transition:background 100ms var(--ease);position:relative}
+.prod-card:hover{background:#F2F2F2}
+.prod-card.off{background:var(--paper)}
+.prod-card.off:hover{background:#EFEFEF}
+.card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-code{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.07em}
+.prod-card:not(.off) .card-code{color:var(--red)}
+.card-pill{font-size:9px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;padding:3px 7px;border:1px solid var(--border)}
+.card-pill.on{color:var(--green);border-color:rgba(34,197,94,.25);background:rgba(34,197,94,.07)}
+.card-pill.off{color:var(--muted);border-color:var(--border)}
+.card-name{font-size:13px;font-weight:600;color:var(--ink);letter-spacing:-0.01em;margin-bottom:2px;line-height:1.25}
+.prod-card.off .card-name{color:rgba(0,0,0,0.3)}
+.card-desc{font-size:10px;color:var(--muted);line-height:1.4;margin-bottom:14px}
+.prod-card.off .card-desc{opacity:.5}
+.card-num{font-size:24px;font-weight:600;color:var(--ink);letter-spacing:-0.03em;line-height:1}
+.prod-card.off .card-num{color:rgba(0,0,0,0.2)}
+.card-num-lbl{font-size:10px;color:var(--muted);margin-top:3px;font-weight:500}
+.card-bottom{display:flex;align-items:center;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.card-stat{font-size:11px;font-weight:600;color:var(--muted)}
+.card-stat span{color:var(--ink)}
+.prod-card.off .card-stat span{color:rgba(0,0,0,0.25)}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div style="display:flex;align-items:center">
+      <div class="nb-logo" onclick="S.view='overview';render()">
+        <div class="nb-wm">networkbay</div>
+        <div class="nb-sp">sports</div>
+      </div>
+      <div class="tb-div"></div>
+      <div class="tb-product">Stadium<span>365</span></div>
+      <div class="tb-div"></div>
+      <div class="tb-venue">HPCA Dharamshala</div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-dot"></div>
+      <div class="tb-status">Indicative model · June 2026</div>
+    </div>
+  </div>
+
+  <!-- KPI STRIP -->
+  <div id="kpi-strip">
+    <div class="kpi">
+      <div class="kpi-lbl">Year 1 revenue</div>
+      <div class="kpi-num" id="kpi-y1">—</div>
+      <div class="kpi-sub" id="kpi-y1s">—</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">5-year revenue</div>
+      <div class="kpi-num" id="kpi-5r">—</div>
+      <div class="kpi-sub">FY2027 – FY2031</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">5-year EBITDA</div>
+      <div class="kpi-num red" id="kpi-5e">—</div>
+      <div class="kpi-sub" id="kpi-em">—</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Payback period</div>
+      <div class="kpi-num" id="kpi-pb">—</div>
+      <div class="kpi-sub" id="kpi-cx">—</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="sidebar"></div>
+    <div id="panel"></div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+const S = {
+  view: 'overview',
+  toggles: { P1:1, P2:0, P3:1, P4:1, P5:1, P6:1, P7:1, P8:0, F1:1 },
+  a: {
+    visitors: 2000,
+    P1: { cap:.60, adultP:600,  childP:400,  adultPct:.60, days:200,
+          actCap:.40, actSpend:400, audRate:.20, audPrice:150, opex:.40, grow:.08 },
+    P2: { capRate:.15, spend:350, pkgs:15, pkgVal:15000, days:300, opex:.50, grow:.10 },
+    P3: { tours:15, pax:10, price:200, days:200, opex:.25, grow:.05 },
+    P4: { uc1G:30, uc1P:25000, uc1D:2, uc1E:20, uc2G:200, uc2P:12000, uc2E:10, opex:.40, grow:.15 },
+    P5: { covers:80, spend:1000, days:280, uplift:1.5, matchDays:10,
+          fixedFee:200000, sharePct:.20, threshold:1000000, opex:.15, grow:.08 },
+    P6: { t1w:12, t1f:400000, t2w:6, t2f:1800000, opex:.30, grow:.15 },
+    P7: { events:15, hire:1200000, opex:.35, grow:.10 },
+    P8: { members:200, fee:50000, memGrow:50, opex:.20, grow:.05 },
+    F1: { matches:5, matchRev:30000000, naming:7500000,
+          boxes:17, boxFee:1000000, opex:.10, grow:.08 }
+  }
+};
+
+const CODES = ['P1','P2','P3','P4','P5','P6','P7','P8','F1'];
+
+const META = {
+  P1: { name:'Cricket museum',   full:'Cricket Experience Centre',    sub:'Entry · activity zone · audio tour · 200 days/yr' },
+  P2: { name:'FEC',              full:'Family Entertainment Centre',  sub:'Standalone entertainment venue · requires new build' },
+  P3: { name:'Stadium tour',     full:'Stadium Tour',                 sub:'Guided add-on · groups of 10 · ₹200/head' },
+  P4: { name:'Corporate retreat',full:'Corporate Retreat & Conference',sub:'UC1 offsite program + UC2 cricket day events' },
+  P5: { name:'The Pavilion',     full:'The Pavilion — All-Day Dining',sub:'F&B operator lease · fixed fee + revenue share' },
+  P6: { name:'HP training',      full:'High-Performance Training',    sub:'Cricket residency camps · altitude facility hire' },
+  P7: { name:'Wedding & events', full:'Weddings & Special Events',    sub:'Venue hire · outfield + banquet hall · 15 events/yr' },
+  P8: { name:'VIP membership',   full:'VIP Membership Club',          sub:'Access layer · no dedicated new infrastructure' },
+  F1: { name:'Foundation',       full:'Foundation — In-Stadia Revenue',sub:'Box packages + naming rights + international matches' },
+};
+
+// ── CALC ────────────────────────────────────────────────────────────────────
+function rev1(c) {
+  if (!S.toggles[c]) return 0;
+  const a = S.a, v = a.visitors;
+  switch(c) {
+    case 'P1': {
+      const p = a.P1, bl = p.adultPct * p.adultP + (1 - p.adultPct) * p.childP;
+      return v * p.cap * bl * p.days
+           + v * p.cap * p.actCap * p.actSpend * p.days
+           + v * p.cap * p.audRate * p.audPrice * p.days;
+    }
+    case 'P2': {
+      const p = a.P2;
+      return v * p.capRate * p.spend * p.days + p.pkgs * 12 * p.pkgVal;
+    }
+    case 'P3': { const p = a.P3; return p.tours * p.pax * p.price * p.days; }
+    case 'P4': { const p = a.P4; return p.uc1G * p.uc1P * p.uc1D * p.uc1E + p.uc2G * p.uc2P * p.uc2E; }
+    case 'P5': {
+      const p = a.P5;
+      const gross = p.covers * p.spend * (p.days - p.matchDays) + p.covers * p.spend * p.uplift * p.matchDays;
+      return p.fixedFee * 12 + Math.max(0, (gross - p.threshold) * p.sharePct);
+    }
+    case 'P6': { const p = a.P6; return p.t1w * p.t1f + p.t2w * p.t2f; }
+    case 'P7': { const p = a.P7; return p.events * p.hire; }
+    case 'P8': { const p = a.P8; return p.members * p.fee; }
+    case 'F1': { const p = a.F1; return p.boxes * p.boxFee; }
+    default: return 0;
+  }
+}
+
+function rev5(c) {
+  if (!S.toggles[c]) return [0,0,0,0,0];
+  const r1 = rev1(c);
+  if (c === 'F1') {
+    const p = S.a.F1;
+    const y2base = r1 * (1 + p.grow) + p.matches * p.matchRev + p.naming;
+    return [r1, y2base, y2base*(1+p.grow), y2base*(1+p.grow)**2, y2base*(1+p.grow)**3];
+  }
+  if (c === 'P8') {
+    const p = S.a.P8;
+    return [1,2,3,4,5].map(y => (p.members + (y-1)*p.memGrow) * (p.fee * (1+p.grow)**(y-1)));
+  }
+  const g = S.a[c]?.grow || 0;
+  return [0,1,2,3,4].map(i => r1 * (1+g)**i);
+}
+
+function ebitda5arr(c) {
+  const op = S.a[c]?.opex || 0;
+  return rev5(c).map(v => v * (1 - op));
+}
+
+function totalRev5arr() {
+  return [0,1,2,3,4].map(i => CODES.reduce((s,c) => s + rev5(c)[i], 0));
+}
+
+function totalEbitda5arr() {
+  return [0,1,2,3,4].map(i => CODES.reduce((s,c) => s + ebitda5arr(c)[i], 0));
+}
+
+function totalCapex() {
+  const FIT = 4500;
+  let t = 0;
+  if (S.toggles.P1) t += (18500 + 18500) * FIT;
+  if (S.toggles.P2) t += (10000 + 10000) * FIT;
+  if (S.toggles.P4 || S.toggles.P7) t += (5000 + 5425 + 3500) * FIT; // conf + banquet + bar
+  if (S.toggles.P4 || S.toggles.P7 || S.toggles.P8) t += 3264 * FIT; // boxes
+  if (S.toggles.P6) t += 120000000; // ESP Wellness
+  if (S.toggles.F1) t += 800000000; // Stadium upgrade
+  return t;
+}
+
+function prodCapex(c) {
+  const FIT = 4500;
+  if (c === 'P1') return (18500 + 18500) * FIT;
+  if (c === 'P2') return (10000 + 10000) * FIT;
+  if (c === 'P6') return 120000000;
+  if (c === 'F1') return 800000000;
+  return null;
+}
+
+// ── FORMAT ──────────────────────────────────────────────────────────────────
+function fCr(v) {
+  const cr = v / 1e7;
+  if (cr >= 100) return '₹' + Math.round(cr) + ' Cr';
+  if (cr >= 10)  return '₹' + cr.toFixed(1) + ' Cr';
+  if (cr >= 1)   return '₹' + cr.toFixed(2) + ' Cr';
+  return '₹' + (v/1e5).toFixed(1) + 'L';
+}
+function fPct(v) { return Math.round(v * 100) + '%'; }
+function fInr(v) {
+  const n = Math.round(v);
+  if (n >= 10000000) return '₹' + (n/10000000).toFixed(1) + ' Cr';
+  if (n >= 100000)  return '₹' + (n/100000).toFixed(1) + 'L';
+  return '₹' + n.toLocaleString('en-IN');
+}
+function fNum(v) { return Math.round(v).toLocaleString('en-IN'); }
+function fSlider(v, fmt) {
+  if (fmt === 'pct') return fPct(v);
+  if (fmt === 'inr') return fInr(v);
+  return fNum(v);
+}
+function getA(scope, key) { return scope === 'a' ? S.a[key] : S.a[scope][key]; }
+function setA(scope, key, val) { if (scope === 'a') S.a[key] = val; else S.a[scope][key] = val; }
+
+// ── SLIDER CONFIGS ──────────────────────────────────────────────────────────
+const SLIDERS = {
+  P1: [
+    { sec: 'Shared footfall', items: [
+      { key:'visitors', sc:'a',  lbl:'Daily visitors (shared with P2, P3)', min:200,  max:5000, step:100, fmt:'num' },
+    ]},
+    { sec: 'Entry ticket', items: [
+      { key:'cap',       sc:'P1', lbl:'Entry capture rate',           min:.1,    max:1,       step:.05,   fmt:'pct' },
+      { key:'adultP',    sc:'P1', lbl:'Adult ticket (₹)',             min:100,   max:2000,    step:50,    fmt:'inr' },
+      { key:'childP',    sc:'P1', lbl:'Child ticket (₹)',             min:50,    max:1000,    step:50,    fmt:'inr' },
+      { key:'adultPct',  sc:'P1', lbl:'Adult share of visitors',      min:.1,    max:.9,      step:.05,   fmt:'pct' },
+      { key:'days',      sc:'P1', lbl:'Operating days/year',          min:50,    max:300,     step:5,     fmt:'num' },
+    ]},
+    { sec: 'Activity zone', items: [
+      { key:'actCap',    sc:'P1', lbl:'Activity capture rate',        min:.05,   max:.8,      step:.05,   fmt:'pct' },
+      { key:'actSpend',  sc:'P1', lbl:'Avg activity spend (₹)',       min:100,   max:1500,    step:50,    fmt:'inr' },
+    ]},
+    { sec: 'Audio tour', items: [
+      { key:'audRate',   sc:'P1', lbl:'Rental rate (% of visitors)',  min:.05,   max:.5,      step:.05,   fmt:'pct' },
+      { key:'audPrice',  sc:'P1', lbl:'Rental price (₹)',             min:50,    max:500,     step:25,    fmt:'inr' },
+    ]},
+    { sec: 'Economics', items: [
+      { key:'opex',      sc:'P1', lbl:'Opex ratio',                   min:.1,    max:.8,      step:.05,   fmt:'pct' },
+      { key:'grow',      sc:'P1', lbl:'Annual growth rate',           min:.01,   max:.3,      step:.01,   fmt:'pct' },
+    ]},
+  ],
+  P2: [
+    { sec: 'Footfall (draws from shared visitors)', items: [
+      { key:'capRate',  sc:'P2', lbl:'Capture rate',                  min:.05,   max:.4,      step:.05,   fmt:'pct' },
+      { key:'spend',    sc:'P2', lbl:'Avg spend per visitor (₹)',     min:100,   max:1000,    step:25,    fmt:'inr' },
+      { key:'days',     sc:'P2', lbl:'Operating days/year',           min:100,   max:365,     step:5,     fmt:'num' },
+    ]},
+    { sec: 'Group packages', items: [
+      { key:'pkgs',     sc:'P2', lbl:'Group/birthday packages/month', min:1,     max:50,      step:1,     fmt:'num' },
+      { key:'pkgVal',   sc:'P2', lbl:'Avg package value (₹)',         min:5000,  max:50000,   step:1000,  fmt:'inr' },
+    ]},
+    { sec: 'Economics', items: [
+      { key:'opex',     sc:'P2', lbl:'Opex ratio',                    min:.2,    max:.9,      step:.05,   fmt:'pct' },
+      { key:'grow',     sc:'P2', lbl:'Annual growth rate',            min:.01,   max:.3,      step:.01,   fmt:'pct' },
+    ]},
+  ],
+  P3: [
+    { sec: 'Tour structure', items: [
+      { key:'tours',   sc:'P3', lbl:'Guided tours per day',           min:1,     max:50,      step:1,     fmt:'num' },
+      { key:'pax',     sc:'P3', lbl:'Pax per tour',                   min:5,     max:25,      step:1,     fmt:'num' },
+      { key:'price',   sc:'P3', lbl:'Ticket price (₹/head)',          min:50,    max:800,     step:25,    fmt:'inr' },
+      { key:'days',    sc:'P3', lbl:'Tour days/year',                 min:50,    max:300,     step:5,     fmt:'num' },
+    ]},
+    { sec: 'Economics', items: [
+      { key:'opex',    sc:'P3', lbl:'Opex ratio',                     min:.1,    max:.6,      step:.05,   fmt:'pct' },
+      { key:'grow',    sc:'P3', lbl:'Annual growth rate',             min:.01,   max:.3,      step:.01,   fmt:'pct' },
+    ]},
+  ],
+  P4: [
+    { sec: "UC1 — Cricketer's Retreat (offsite program)", items: [
+      { key:'uc1E',    sc:'P4', lbl:'Events per year',                min:1,     max:50,      step:1,     fmt:'num' },
+      { key:'uc1G',    sc:'P4', lbl:'Group size',                     min:10,    max:100,     step:5,     fmt:'num' },
+      { key:'uc1D',    sc:'P4', lbl:'Duration (days)',                min:1,     max:5,       step:1,     fmt:'num' },
+      { key:'uc1P',    sc:'P4', lbl:'Price per person per day (₹)',   min:5000,  max:80000,   step:1000,  fmt:'inr' },
+    ]},
+    { sec: 'UC2 — Corporate Cricket Day', items: [
+      { key:'uc2E',    sc:'P4', lbl:'Events per year',                min:1,     max:30,      step:1,     fmt:'num' },
+      { key:'uc2G',    sc:'P4', lbl:'Group size',                     min:50,    max:500,     step:25,    fmt:'num' },
+      { key:'uc2P',    sc:'P4', lbl:'Price per person (₹)',           min:2000,  max:30000,   step:500,   fmt:'inr' },
+    ]},
+    { sec: 'Economics', items: [
+      { key:'opex',    sc:'P4', lbl:'Opex ratio',                     min:.1,    max:.8,      step:.05,   fmt:'pct' },
+      { key:'grow',    sc:'P4', lbl:'Annual growth rate',             min:.01,   max:.4,      step:.01,   fmt:'pct' },
+    ]},
+  ],
+  P5: [
+    { sec: 'Operator turnover (drives revenue share)', items: [
+      { key:'covers',     sc:'P5', lbl:'Average covers/day',          min:20,    max:300,     step:5,     fmt:'num' },
+      { key:'spend',      sc:'P5', lbl:'Avg spend per cover (₹)',     min:200,   max:3000,    step:50,    fmt:'inr' },
+      { key:'days',       sc:'P5', lbl:'Operating days/year',         min:100,   max:365,     step:5,     fmt:'num' },
+      { key:'uplift',     sc:'P5', lbl:'Matchday uplift multiplier',  min:1,     max:4,       step:.1,    fmt:'num' },
+      { key:'matchDays',  sc:'P5', lbl:'Match days/year',             min:1,     max:30,      step:1,     fmt:'num' },
+    ]},
+    { sec: 'HPCA income structure', items: [
+      { key:'fixedFee',   sc:'P5', lbl:'Fixed license fee/month (₹)', min:50000, max:1000000, step:25000, fmt:'inr' },
+      { key:'sharePct',   sc:'P5', lbl:'Revenue share %',             min:.05,   max:.4,      step:.05,   fmt:'pct' },
+      { key:'threshold',  sc:'P5', lbl:'Share threshold (₹ annual)',  min:200000,max:5000000, step:100000,fmt:'inr' },
+    ]},
+    { sec: 'Economics', items: [
+      { key:'opex',       sc:'P5', lbl:'Opex ratio',                  min:.05,   max:.4,      step:.05,   fmt:'pct' },
+      { key:'grow',       sc:'P5', lbl:'Annual growth rate',          min:.01,   max:.3,      step:.01,   fmt:'pct' },
+    ]},
+  ],
+  P6: [
+    { sec: 'Tier 1 — National/emerging team residencies', items: [
+      { key:'t1w',    sc:'P6', lbl:'Residency weeks/year',            min:1,     max:30,      step:1,     fmt:'num' },
+      { key:'t1f',    sc:'P6', lbl:'Weekly facility fee (₹)',         min:100000,max:1500000, step:50000, fmt:'inr' },
+    ]},
+    { sec: 'Tier 2 — IPL franchise & domestic premium', items: [
+      { key:'t2w',    sc:'P6', lbl:'Residency weeks/year',            min:1,     max:20,      step:1,     fmt:'num' },
+      { key:'t2f',    sc:'P6', lbl:'Weekly facility fee (₹)',         min:500000,max:5000000, step:100000,fmt:'inr' },
+    ]},
+    { sec: 'Economics', items: [
+      { key:'opex',   sc:'P6', lbl:'Opex ratio',                      min:.1,    max:.6,      step:.05,   fmt:'pct' },
+      { key:'grow',   sc:'P6', lbl:'Annual growth rate',              min:.01,   max:.4,      step:.01,   fmt:'pct' },
+    ]},
+  ],
+  P7: [
+    { sec: 'Event structure', items: [
+      { key:'events', sc:'P7', lbl:'Events per year',                 min:1,     max:40,      step:1,     fmt:'num' },
+      { key:'hire',   sc:'P7', lbl:'Venue hire per event (₹)',        min:200000,max:5000000, step:100000,fmt:'inr' },
+    ]},
+    { sec: 'Economics', items: [
+      { key:'opex',   sc:'P7', lbl:'Opex ratio',                      min:.1,    max:.6,      step:.05,   fmt:'pct' },
+      { key:'grow',   sc:'P7', lbl:'Annual growth rate',              min:.01,   max:.3,      step:.01,   fmt:'pct' },
+    ]},
+  ],
+  P8: [
+    { sec: 'Membership', items: [
+      { key:'members', sc:'P8', lbl:'Year 1 members',                 min:50,    max:1000,    step:25,    fmt:'num' },
+      { key:'fee',     sc:'P8', lbl:'Annual membership fee (₹)',      min:10000, max:200000,  step:5000,  fmt:'inr' },
+      { key:'memGrow', sc:'P8', lbl:'New members per year',           min:10,    max:200,     step:10,    fmt:'num' },
+    ]},
+    { sec: 'Economics', items: [
+      { key:'opex',    sc:'P8', lbl:'Opex ratio',                     min:.05,   max:.5,      step:.05,   fmt:'pct' },
+      { key:'grow',    sc:'P8', lbl:'Annual fee growth',              min:.01,   max:.2,      step:.01,   fmt:'pct' },
+    ]},
+  ],
+  F1: [
+    { sec: 'International matches (Year 2+ only)', items: [
+      { key:'matches',   sc:'F1', lbl:'Additional intl matches/yr post-expansion', min:0, max:15,      step:1,      fmt:'num' },
+      { key:'matchRev',  sc:'F1', lbl:'HPCA gate revenue per match (₹)',           min:5e6,max:1e8,    step:1e6,    fmt:'inr' },
+    ]},
+    { sec: 'Naming rights (Year 2+ only)', items: [
+      { key:'naming',    sc:'F1', lbl:'Annual naming rights revenue (₹)',           min:0, max:5e7,     step:5e5,    fmt:'inr' },
+    ]},
+    { sec: 'Box packages (Year 1 revenue source)', items: [
+      { key:'boxes',     sc:'F1', lbl:'Annual box packages sold',                   min:0, max:17,      step:1,      fmt:'num' },
+      { key:'boxFee',    sc:'F1', lbl:'Annual box package fee (₹)',                 min:2e5,max:5e6,    step:1e5,    fmt:'inr' },
+    ]},
+    { sec: 'Economics', items: [
+      { key:'opex',      sc:'F1', lbl:'Opex ratio',                                 min:.05,max:.3,     step:.05,    fmt:'pct' },
+      { key:'grow',      sc:'F1', lbl:'Box package growth/year',                    min:.01,max:.3,     step:.01,    fmt:'pct' },
+    ]},
+  ],
+};
+
+// ── KPI RENDER ──────────────────────────────────────────────────────────────
+function renderKPI() {
+  const y1 = CODES.reduce((s,c) => s + rev1(c), 0);
+  const r5 = totalRev5arr();
+  const e5 = totalEbitda5arr();
+  const tot5 = r5.reduce((s,v) => s+v, 0);
+  const etot5 = e5.reduce((s,v) => s+v, 0);
+  const cap = totalCapex();
+  const active = CODES.filter(c => S.toggles[c]).length;
+  const avgE = etot5 / 5;
+  const pb = avgE > 0 ? cap / avgE : null;
+
+  document.getElementById('kpi-y1').textContent = fCr(y1);
+  document.getElementById('kpi-y1s').textContent = active + ' product' + (active !== 1 ? 's' : '') + ' active';
+  document.getElementById('kpi-5r').textContent = fCr(tot5);
+  document.getElementById('kpi-5e').textContent = fCr(etot5);
+  document.getElementById('kpi-em').textContent = tot5 > 0 ? Math.round(etot5/tot5*100) + '% EBITDA margin' : '—';
+  document.getElementById('kpi-pb').textContent = pb ? pb.toFixed(1) + ' yrs' : 'N/A';
+  document.getElementById('kpi-cx').textContent = 'total capex ' + fCr(cap);
+}
+
+// ── SIDEBAR RENDER ──────────────────────────────────────────────────────────
+function renderSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.innerHTML = `<div class="sb-head">
+    <span>Products</span>
+    <span class="sb-overview" onclick="S.view='overview';render()">Overview</span>
+  </div>`;
+  CODES.forEach(code => {
+    const on = S.toggles[code];
+    const active = S.view === code;
+    const rv = rev1(code);
+    const div = document.createElement('div');
+    div.className = 'prod-row' + (active ? ' active' : '') + (!on ? ' inactive' : '');
+    div.innerHTML = `
+      <span class="pc">${code}</span>
+      <span class="pn">${META[code].name}</span>
+      <span class="pr">${on ? fCr(rv) : '—'}</span>
+      <div class="tog ${on ? 'on' : 'off'}" data-code="${code}"><div class="togdot"></div></div>`;
+    div.addEventListener('click', e => {
+      if (e.target.closest('.tog')) return;
+      S.view = code; render();
+    });
+    div.querySelector('.tog').addEventListener('click', e => {
+      e.stopPropagation();
+      S.toggles[code] = S.toggles[code] ? 0 : 1;
+      if (!S.toggles[code] && S.view === code) S.view = 'overview';
+      render();
+    });
+    sb.appendChild(div);
+  });
+}
+
+// ── OVERVIEW RENDER ──────────────────────────────────────────────────────────
+function renderOverview() {
+  const r5 = totalRev5arr();
+  const e5 = totalEbitda5arr();
+  const YEARS = ['FY2027','FY2028','FY2029','FY2030','FY2031'];
+
+  const cards = CODES.map(c => {
+    const on = S.toggles[c], rv = rev1(c);
+    const op = S.a[c]?.opex || 0;
+    const tot5 = rev5(c).reduce((s,v)=>s+v,0);
+    const ebitdaM = on ? fPct(1 - op) : '—';
+    return `<div class="prod-card ${on ? '' : 'off'}" data-goto="${c}">
+      <div class="card-top">
+        <span class="card-code">${c}</span>
+        <span class="card-pill ${on ? 'on' : 'off'}">${on ? 'Active' : 'Off'}</span>
+      </div>
+      <div class="card-name">${META[c].name}</div>
+      <div class="card-desc">${META[c].sub}</div>
+      <div class="card-num">${on ? fCr(rv) : '—'}</div>
+      <div class="card-num-lbl">Year 1 revenue</div>
+      <div class="card-bottom">
+        <span class="card-stat">EBITDA <span>${ebitdaM}</span></span>
+        <span class="card-stat">5-yr <span>${on ? fCr(tot5) : '—'}</span></span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const thdrs = YEARS.map(y => `<th>${y}</th>`).join('');
+  const r_tds = r5.map(v => `<td>${fCr(v)}</td>`).join('');
+  const e_tds = e5.map(v => `<td>${fCr(v)}</td>`).join('');
+  const tot5 = r5.reduce((s,v)=>s+v,0);
+  const etot5 = e5.reduce((s,v)=>s+v,0);
+
+  document.getElementById('panel').innerHTML = `<div id="overview">
+    <div class="ov-section">
+      <div class="ov-title">Products — click to edit assumptions</div>
+      <div class="prod-grid">${cards}</div>
+    </div>
+    <div class="ov-section">
+      <div class="ov-title">5-year programme P&amp;L · FY2027 – FY2031</div>
+      <table class="yr-table">
+        <thead><tr><th>Metric</th>${thdrs}<th>5-Yr Total</th></tr></thead>
+        <tbody>
+          <tr class="total-row"><td>Revenue</td>${r_tds}<td>${fCr(tot5)}</td></tr>
+          <tr class="ebitda-row"><td>EBITDA</td>${e_tds}<td>${fCr(etot5)}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+
+  document.querySelectorAll('.prod-card[data-goto]').forEach(card => {
+    card.addEventListener('click', () => { S.view = card.dataset.goto; render(); });
+  });
+}
+
+// ── PRODUCT DETAIL RENDER ────────────────────────────────────────────────────
+function renderProduct(code) {
+  const meta = META[code];
+  const on = S.toggles[code];
+  const yrs = rev5(code);
+  const r1 = rev1(code);
+  const capx = prodCapex(code);
+  const YEARS = ['Year 1','Year 2','Year 3','Year 4','Year 5'];
+  const idx = CODES.indexOf(code);
+  const prev = CODES[idx > 0 ? idx-1 : CODES.length-1];
+  const next = CODES[idx < CODES.length-1 ? idx+1 : 0];
+
+  // --- Right panel content ---
+  let rightHTML = '';
+  if (on) {
+    // Output cards
+    let cardHTML = '';
+    const op = S.a[code]?.opex || 0;
+    if (code === 'P1') {
+      const p = S.a.P1, v = S.a.visitors;
+      const bl = p.adultPct*p.adultP + (1-p.adultPct)*p.childP;
+      const entry = v*p.cap*bl*p.days;
+      const act   = v*p.cap*p.actCap*p.actSpend*p.days;
+      const aud   = v*p.cap*p.audRate*p.audPrice*p.days;
+      cardHTML = `<div class="out-grid cols3">
+        <div class="oc hero"><div class="oc-lbl">Year 1 total</div><div class="oc-num">${fCr(r1)}</div><div class="oc-sub">${fPct(1-op)} EBITDA margin</div></div>
+        <div class="oc"><div class="oc-lbl">Entry tickets</div><div class="oc-num">${fCr(entry)}</div></div>
+        <div class="oc"><div class="oc-lbl">Activity zone</div><div class="oc-num">${fCr(act)}</div></div>
+      </div><div class="out-grid cols2">
+        <div class="oc"><div class="oc-lbl">Audio tour rental</div><div class="oc-num">${fCr(aud)}</div></div>
+        <div class="oc"><div class="oc-lbl">5-year total</div><div class="oc-num">${fCr(yrs.reduce((s,v)=>s+v,0))}</div></div>
+      </div>`;
+    } else if (code === 'P4') {
+      const p = S.a.P4;
+      const uc1 = p.uc1G*p.uc1P*p.uc1D*p.uc1E, uc2 = p.uc2G*p.uc2P*p.uc2E;
+      cardHTML = `<div class="out-grid cols3">
+        <div class="oc hero"><div class="oc-lbl">Year 1 total</div><div class="oc-num">${fCr(r1)}</div><div class="oc-sub">${fPct(1-op)} EBITDA margin</div></div>
+        <div class="oc"><div class="oc-lbl">UC1 — Retreat</div><div class="oc-num">${fCr(uc1)}</div><div class="oc-sub">${p.uc1E} events</div></div>
+        <div class="oc"><div class="oc-lbl">UC2 — Cricket day</div><div class="oc-num">${fCr(uc2)}</div><div class="oc-sub">${p.uc2E} events</div></div>
+      </div>`;
+    } else if (code === 'P5') {
+      const p = S.a.P5;
+      const gross = p.covers*p.spend*(p.days-p.matchDays) + p.covers*p.spend*p.uplift*p.matchDays;
+      const fixed = p.fixedFee*12;
+      const share = Math.max(0,(gross-p.threshold)*p.sharePct);
+      cardHTML = `<div class="out-grid cols3">
+        <div class="oc hero"><div class="oc-lbl">HPCA income yr 1</div><div class="oc-num">${fCr(r1)}</div><div class="oc-sub">${fPct(1-op)} EBITDA margin</div></div>
+        <div class="oc"><div class="oc-lbl">Fixed license</div><div class="oc-num">${fCr(fixed)}</div></div>
+        <div class="oc"><div class="oc-lbl">Revenue share</div><div class="oc-num">${fCr(share)}</div><div class="oc-sub">on ₹${(gross/1e7).toFixed(1)} Cr turnover</div></div>
+      </div>`;
+    } else if (code === 'P6') {
+      const p = S.a.P6;
+      const t1 = p.t1w*p.t1f, t2 = p.t2w*p.t2f;
+      cardHTML = `<div class="out-grid cols3">
+        <div class="oc hero"><div class="oc-lbl">Year 1 total</div><div class="oc-num">${fCr(r1)}</div><div class="oc-sub">${fPct(1-op)} EBITDA margin</div></div>
+        <div class="oc"><div class="oc-lbl">Tier 1 residencies</div><div class="oc-num">${fCr(t1)}</div><div class="oc-sub">${S.a.P6.t1w} weeks</div></div>
+        <div class="oc"><div class="oc-lbl">Tier 2 — IPL</div><div class="oc-num">${fCr(t2)}</div><div class="oc-sub">${S.a.P6.t2w} weeks</div></div>
+      </div>`;
+    } else if (code === 'F1') {
+      const p = S.a.F1;
+      const matchY2 = p.matches * p.matchRev;
+      cardHTML = `<div class="out-grid cols3">
+        <div class="oc hero"><div class="oc-lbl">Year 1 (boxes only)</div><div class="oc-num">${fCr(r1)}</div><div class="oc-sub">${p.boxes} × ${fInr(p.boxFee)}</div></div>
+        <div class="oc"><div class="oc-lbl">Yr 2+ matches/yr</div><div class="oc-num">${fCr(matchY2)}</div><div class="oc-sub">${p.matches} matches</div></div>
+        <div class="oc"><div class="oc-lbl">Naming rights/yr</div><div class="oc-num">${fCr(p.naming)}</div></div>
+      </div>
+      <div class="note-box"><p>Year 1 = box packages only. Matches + naming rights activate from Year 2 once stadium expansion completes. Yr 2 revenue: ${fCr(yrs[1])}</p></div>`;
+    } else {
+      cardHTML = `<div class="out-grid cols3">
+        <div class="oc hero"><div class="oc-lbl">Year 1 total</div><div class="oc-num">${fCr(r1)}</div><div class="oc-sub">${fPct(1-op)} EBITDA margin</div></div>
+        <div class="oc"><div class="oc-lbl">5-yr total</div><div class="oc-num">${fCr(yrs.reduce((s,v)=>s+v,0))}</div></div>
+        <div class="oc"><div class="oc-lbl">5-yr EBITDA</div><div class="oc-num">${fCr(ebitda5arr(code).reduce((s,v)=>s+v,0))}</div></div>
+      </div>`;
+    }
+
+    // 5-year strip
+    const strip = yrs.map((v,i) => {
+      const e = v * (1 - (S.a[code]?.opex||0));
+      return `<div class="yc ${i===0?'yr1':''}">
+        <div class="yc-lbl">${YEARS[i]}</div>
+        <div class="yc-num">${fCr(v)}</div>
+        <div class="yc-ebitda">${fCr(e)}</div>
+      </div>`;
+    }).join('');
+
+    // Capex
+    let capexHTML = '';
+    const capexDesc = {
+      P1: '18,500 sqft structure + 18,500 sqft fit-out · ₹4,500/sqft each',
+      P2: '10,000 sqft structure + 10,000 sqft fit-out · ₹4,500/sqft each',
+      P6: 'ESP Wellness all-in package · specialist equipment + recovery tech',
+      F1: 'New seating, shade canopy, concourse, facade, floodlights · all-in'
+    };
+    const sharedDesc = {
+      P3: 'No dedicated capex — uses existing infrastructure',
+      P4: 'Shared: conference hall + banquet + bar + boxes (counted once in total)',
+      P5: 'Shared: VIP Pavilion Bar fit-out — counted when P5 or P7 is active',
+      P7: 'Shared: conference hall + banquet hall + bar (counted once in total)',
+      P8: 'No dedicated capex — uses existing boxes and facilities'
+    };
+    if (capx !== null) {
+      capexHTML = `<div class="capex-row">
+        <div class="cx"><div class="cx-lbl">Dedicated capex</div><div class="cx-num">${fCr(capx)}</div><div class="cx-sub">${capexDesc[code]||''}</div></div>
+        <div class="cx"><div class="cx-lbl">Total programme capex</div><div class="cx-num">${fCr(totalCapex())}</div><div class="cx-sub">all active products combined</div></div>
+      </div>`;
+    } else {
+      capexHTML = `<div class="capex-row">
+        <div class="cx" style="grid-column:1/-1"><div class="cx-lbl">Capex note</div><div class="cx-num" style="font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0">${sharedDesc[code]||''}</div></div>
+      </div>`;
+    }
+
+    rightHTML = `
+      <div class="col-title">Output</div>
+      ${cardHTML}
+      <div class="col-title" style="margin-top:16px">5-year revenue &amp; EBITDA</div>
+      <div class="yr-strip">${strip}</div>
+      <div class="col-title" style="margin-top:16px">Capital investment</div>
+      ${capexHTML}`;
+  } else {
+    rightHTML = `<div class="col-title">Output</div>
+      <div class="off-state">
+        <h3>${meta.full} is off</h3>
+        <p>Toggle it on in the sidebar or use the switch above to activate this product and edit its assumptions.</p>
+      </div>`;
+  }
+
+  // --- Sliders ---
+  const sliderSecs = SLIDERS[code] || [];
+  const slidersHTML = on ? sliderSecs.map(sec => `
+    <div class="sec-lbl">${sec.sec}</div>
+    ${sec.items.map(sl => {
+      const v = getA(sl.sc, sl.key);
+      const id = `sl-${sl.sc}-${sl.key}`;
+      return `<div class="sl-group">
+        <div class="sl-top">
+          <span class="sl-lbl">${sl.lbl}</span>
+          <span class="sl-val" id="${id}-val">${fSlider(v, sl.fmt)}</span>
+        </div>
+        <input type="range" id="${id}" data-sc="${sl.sc}" data-key="${sl.key}" data-fmt="${sl.fmt}"
+               min="${sl.min}" max="${sl.max}" step="${sl.step}" value="${v}">
+      </div>`;
+    }).join('')}`).join('') : `<div class="off-state">
+      <h3>Product is off</h3><p>Turn on using the toggle above to edit assumptions.</p></div>`;
+
+  document.getElementById('panel').innerHTML = `<div id="product-detail" class="active">
+    <div class="pd-head">
+      <div class="pd-left-head">
+        <div class="pd-eyebrow">${code} — ${meta.full}</div>
+        <div class="pd-title">${meta.name}</div>
+        <div class="pd-sub">${meta.sub}</div>
+        <div class="pd-tog-area">
+          <span class="pd-tog-lbl">${on ? 'Active' : 'Inactive'}</span>
+          <div class="pd-tog ${on ? 'on' : 'off'}" id="pd-toggle"><div class="pd-togdot"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="pd-body">
+      <div class="pd-col left">
+        <div class="col-title">Assumptions</div>
+        ${slidersHTML}
+      </div>
+      <div class="pd-col right">${rightHTML}</div>
+    </div>
+    <div class="pd-footer">
+      <span class="pd-nav" data-goto="${prev}">← ${prev}&nbsp;&nbsp;${META[prev].name}</span>
+      <span class="pd-hint">Sliders update all numbers live</span>
+      <span class="pd-nav" data-goto="${next}">${META[next].name}&nbsp;&nbsp;${next} →</span>
+    </div>
+  </div>`;
+
+  // Attach events
+  document.getElementById('pd-toggle').addEventListener('click', () => {
+    S.toggles[code] = S.toggles[code] ? 0 : 1;
+    render();
+  });
+  document.querySelectorAll('input[type=range]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const sc = inp.dataset.sc, key = inp.dataset.key, fmt = inp.dataset.fmt;
+      const v = parseFloat(inp.value);
+      setA(sc, key, v);
+      document.getElementById(`sl-${sc}-${key}-val`).textContent = fSlider(v, fmt);
+      renderKPI();
+      renderSidebar();
+      refreshRight(code);
+    });
+  });
+  document.querySelectorAll('.pd-nav[data-goto]').forEach(btn => {
+    btn.addEventListener('click', () => { S.view = btn.dataset.goto; render(); });
+  });
+}
+
+// ── REFRESH RIGHT PANEL ONLY (no slider re-render) ───────────────────────────
+function refreshRight(code) {
+  const on = S.toggles[code];
+  if (!on) return;
+  const yrs = rev5(code);
+  const r1 = rev1(code);
+  const capx = prodCapex(code);
+  const op = S.a[code]?.opex || 0;
+  const YEARS = ['Year 1','Year 2','Year 3','Year 4','Year 5'];
+
+  let cardHTML = '';
+  if (code === 'P1') {
+    const p = S.a.P1, v = S.a.visitors;
+    const bl = p.adultPct*p.adultP + (1-p.adultPct)*p.childP;
+    const entry = v*p.cap*bl*p.days, act = v*p.cap*p.actCap*p.actSpend*p.days, aud = v*p.cap*p.audRate*p.audPrice*p.days;
+    cardHTML = `<div class="col-title">Output</div><div class="out-grid cols3">
+      <div class="oc hero"><div class="oc-lbl">Year 1 total</div><div class="oc-num">${fCr(r1)}</div><div class="oc-sub">${fPct(1-op)} EBITDA margin</div></div>
+      <div class="oc"><div class="oc-lbl">Entry tickets</div><div class="oc-num">${fCr(entry)}</div></div>
+      <div class="oc"><div class="oc-lbl">Activity zone</div><div class="oc-num">${fCr(act)}</div></div>
+    </div><div class="out-grid cols2">
+      <div class="oc"><div class="oc-lbl">Audio tour rental</div><div class="oc-num">${fCr(aud)}</div></div>
+      <div class="oc"><div class="oc-lbl">5-year total</div><div class="oc-num">${fCr(yrs.reduce((s,v)=>s+v,0))}</div></div>
+    </div>`;
+  } else if (code === 'P4') {
+    const p = S.a.P4;
+    const uc1 = p.uc1G*p.uc1P*p.uc1D*p.uc1E, uc2 = p.uc2G*p.uc2P*p.uc2E;
+    cardHTML = `<div class="col-title">Output</div><div class="out-grid cols3">
+      <div class="oc hero"><div class="oc-lbl">Year 1 total</div><div class="oc-num">${fCr(r1)}</div><div class="oc-sub">${fPct(1-op)} EBITDA margin</div></div>
+      <div class="oc"><div class="oc-lbl">UC1 — Retreat</div><div class="oc-num">${fCr(uc1)}</div><div class="oc-sub">${p.uc1E} events</div></div>
+      <div class="oc"><div class="oc-lbl">UC2 — Cricket day</div><div class="oc-num">${fCr(uc2)}</div><div class="oc-sub">${p.uc2E} events</div></div>
+    </div>`;
+  } else if (code === 'P5') {
+    const p = S.a.P5;
+    const gross = p.covers*p.spend*(p.days-p.matchDays) + p.covers*p.spend*p.uplift*p.matchDays;
+    const fixed = p.fixedFee*12, share = Math.max(0,(gross-p.threshold)*p.sharePct);
+    cardHTML = `<div class="col-title">Output</div><div class="out-grid cols3">
+      <div class="oc hero"><div class="oc-lbl">HPCA income yr 1</div><div class="oc-num">${fCr(r1)}</div><div class="oc-sub">${fPct(1-op)} EBITDA margin</div></div>
+      <div class="oc"><div class="oc-lbl">Fixed license</div><div class="oc-num">${fCr(fixed)}</div></div>
+      <div class="oc"><div class="oc-lbl">Revenue share</div><div class="oc-num">${fCr(share)}</div><div class="oc-sub">on ₹${(gross/1e7).toFixed(1)} Cr turnover</div></div>
+    </div>`;
+  } else if (code === 'P6') {
+    const p = S.a.P6;
+    const t1 = p.t1w*p.t1f, t2 = p.t2w*p.t2f;
+    cardHTML = `<div class="col-title">Output</div><div class="out-grid cols3">
+      <div class="oc hero"><div class="oc-lbl">Year 1 total</div><div class="oc-num">${fCr(r1)}</div><div class="oc-sub">${fPct(1-op)} EBITDA margin</div></div>
+      <div class="oc"><div class="oc-lbl">Tier 1 residencies</div><div class="oc-num">${fCr(t1)}</div><div class="oc-sub">${S.a.P6.t1w} weeks</div></div>
+      <div class="oc"><div class="oc-lbl">Tier 2 — IPL</div><div class="oc-num">${fCr(t2)}</div><div class="oc-sub">${S.a.P6.t2w} weeks</div></div>
+    </div>`;
+  } else if (code === 'F1') {
+    const p = S.a.F1;
+    cardHTML = `<div class="col-title">Output</div><div class="out-grid cols3">
+      <div class="oc hero"><div class="oc-lbl">Year 1 (boxes only)</div><div class="oc-num">${fCr(r1)}</div><div class="oc-sub">${p.boxes} × ${fInr(p.boxFee)}</div></div>
+      <div class="oc"><div class="oc-lbl">Yr 2+ matches/yr</div><div class="oc-num">${fCr(p.matches*p.matchRev)}</div><div class="oc-sub">${p.matches} matches</div></div>
+      <div class="oc"><div class="oc-lbl">Naming rights/yr</div><div class="oc-num">${fCr(p.naming)}</div></div>
+    </div><div class="note-box"><p>Year 1 = box packages only. Expansion revenue activates Year 2. Yr 2 revenue: ${fCr(yrs[1])}</p></div>`;
+  } else {
+    cardHTML = `<div class="col-title">Output</div><div class="out-grid cols3">
+      <div class="oc hero"><div class="oc-lbl">Year 1 total</div><div class="oc-num">${fCr(r1)}</div><div class="oc-sub">${fPct(1-op)} EBITDA margin</div></div>
+      <div class="oc"><div class="oc-lbl">5-yr total</div><div class="oc-num">${fCr(yrs.reduce((s,v)=>s+v,0))}</div></div>
+      <div class="oc"><div class="oc-lbl">5-yr EBITDA</div><div class="oc-num">${fCr(ebitda5arr(code).reduce((s,v)=>s+v,0))}</div></div>
+    </div>`;
+  }
+
+  const strip = yrs.map((v,i) => {
+    const e = v * (1 - op);
+    return `<div class="yc ${i===0?'yr1':''}">
+      <div class="yc-lbl">${YEARS[i]}</div><div class="yc-num">${fCr(v)}</div><div class="yc-ebitda">${fCr(e)}</div></div>`;
+  }).join('');
+
+  const capexDesc = { P1:'18,500 sqft structure + 18,500 sqft fit-out · ₹4,500/sqft each', P2:'10,000 sqft structure + 10,000 sqft fit-out · ₹4,500/sqft each', P6:'ESP Wellness all-in package', F1:'Seating, canopy, concourse, facade, floodlights' };
+  const sharedDesc = { P3:'No dedicated capex — uses existing infrastructure', P4:'Shared: conference hall + banquet + bar + boxes', P5:'Shared: VIP Pavilion Bar fit-out', P7:'Shared: conference hall + banquet hall + bar', P8:'No dedicated capex — existing boxes and facilities' };
+  let capexHTML = '';
+  if (capx !== null) {
+    capexHTML = `<div class="col-title" style="margin-top:16px">Capital investment</div>
+      <div class="capex-row"><div class="cx"><div class="cx-lbl">Dedicated capex</div><div class="cx-num">${fCr(capx)}</div><div class="cx-sub">${capexDesc[code]||''}</div></div>
+      <div class="cx"><div class="cx-lbl">Total programme capex</div><div class="cx-num">${fCr(totalCapex())}</div><div class="cx-sub">all active products</div></div></div>`;
+  } else {
+    capexHTML = `<div class="col-title" style="margin-top:16px">Capital investment</div>
+      <div class="capex-row"><div class="cx" style="grid-column:1/-1"><div class="cx-lbl">Capex note</div><div class="cx-num" style="font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0">${sharedDesc[code]||''}</div></div></div>`;
+  }
+
+  const right = document.querySelector('.pd-col.right');
+  if (right) right.innerHTML = `${cardHTML}
+    <div class="col-title" style="margin-top:16px">5-year revenue &amp; EBITDA</div>
+    <div class="yr-strip">${strip}</div>
+    ${capexHTML}`;
+}
+
+// ── MAIN RENDER ──────────────────────────────────────────────────────────────
+function render() {
+  renderKPI();
+  renderSidebar();
+  if (S.view === 'overview') {
+    renderOverview();
+  } else {
+    renderProduct(S.view);
+  }
+}
+
+render();
+</script>
+</body>
+</html>
