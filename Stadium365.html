@@ -225,7 +225,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
   <div class="kc"><div class="kl">Year 1 revenue</div><div class="kn" id="ky1">—</div><div class="ks" id="ky1s">—</div></div>
   <div class="kc"><div class="kl">5-year revenue</div><div class="kn" id="k5r">—</div><div class="ks">FY2027 – FY2031</div></div>
   <div class="kc"><div class="kl">5-year EBITDA</div><div class="kn red" id="k5e">—</div><div class="ks" id="kem">—</div></div>
-  <div class="kc"><div class="kl">Payback period</div><div class="kn" id="kpb">—</div><div class="ks" id="kcx">—</div></div>
+  <div class="kc"><div class="kl">Total capex</div><div class="kn red" id="kcx">—</div><div class="ks" id="kpb">—</div></div>
 </div>
 
 <div id="main">
@@ -420,8 +420,8 @@ function renderKPI() {
   document.getElementById('k5r').textContent=fCr(tot5);
   document.getElementById('k5e').textContent=fCr(etot5);
   document.getElementById('kem').textContent=tot5>0?Math.round(etot5/tot5*100)+'% EBITDA margin':'—';
-  document.getElementById('kpb').textContent=pb?pb.toFixed(1)+' yrs':'N/A';
-  document.getElementById('kcx').textContent='total capex '+fCr(cap);
+  document.getElementById('kcx').textContent=fCr(cap);
+  document.getElementById('kpb').textContent=pb?pb.toFixed(1)+' yr payback':'—';
 }
 
 // ── SIDEBAR ───────────────────────────────────────────────────────────────────
