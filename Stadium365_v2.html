@@ -189,6 +189,24 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .offst h3{font-size:17px;font-weight:600;color:var(--ink);margin-bottom:8px}
 .offst p{font-size:13px;color:var(--muted);line-height:1.5;max-width:280px;margin:0 auto}
 
+/* FULL-PAGE PRODUCT VIEW (narrative + scroll) */
+.pdscroll{flex:1;overflow-y:auto;min-height:0}
+.pdhero-tall{height:420px;position:relative;flex-shrink:0;overflow:hidden;background:#111}
+.pd-narr{background:var(--white);padding:30px 36px 26px;border-bottom:1px solid var(--border)}
+.pd-narr-eyebrow{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:10px}
+.pd-narr-body{font-size:14px;line-height:1.8;color:rgba(0,0,0,.62);max-width:700px}
+.pd-narr-facts{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-top:22px}
+.pd-nf{background:var(--white);padding:12px 14px}
+.pd-nfl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.pd-nfn{font-size:18px;font-weight:600;color:var(--ink);letter-spacing:-.025em;line-height:1}
+.pd-nfs{font-size:10px;color:var(--muted);margin-top:2px}
+.pd-img2{height:300px;background:#111;position:relative;overflow:hidden;flex-shrink:0;border-bottom:1px solid var(--border)}
+.pd-img2-ph{position:absolute;inset:0;background-size:cover;background-position:center}
+.pd-img2-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px}
+.pd-img2-ring{width:36px;height:36px;border-radius:50%;border:1.5px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:16px;color:rgba(255,255,255,.25)}
+.pd-img2-cap{font-size:9px;color:rgba(255,255,255,.2);letter-spacing:.15em;text-transform:uppercase;font-weight:600}
+.pd-calc-hdr{padding:14px 26px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);background:var(--paper)}
+
 /* PRODUCT HERO IMAGE */
 .pdhero{height:220px;position:relative;flex-shrink:0;overflow:hidden;background:#111}
 .pdhero-ph{position:absolute;inset:0;background-size:cover;background-position:center center}
@@ -689,6 +707,117 @@ function buildCapex(code) {
   return '<div class="cxrow"><div class="cx" style="grid-column:1/-1"><div class="cxl">Capex note</div><div class="cxn" style="font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0">'+(shared[code]||'')+'</div></div></div>';
 }
 
+// ── NARRATIVE TEXT PER PRODUCT ───────────────────────────────────────────────
+var NARRATIVE = {
+  P1: 'Dharamshala is already the most-photographed cricket ground in India. The Dhauladhar behind the sightscreen. The altitude. The pitch that has humbled Test teams. Visitors come for all of this long before a match is scheduled. The Cricket Experience Centre turns that instinct into a product — a ticketed museum, activity zone and guided audio tour that runs 200 days a year with no fixture required. It is the only cricket attraction in India built around a ground that the photograph does not do justice to.',
+  P3: 'The stadium tour is the simplest product in the programme and the fastest to launch. No construction. No capex. Dressing rooms, player tunnel, pitch boundary, Dhauladhar backdrop — guided at ₹200 a head. The ground is already the subject. The product is just the permission to enter it.',
+  P6: 'At 1,457 metres above sea level, the HPCA ground is the highest international cricket venue in India. That altitude is not a curiosity — it is a measurable physiological advantage for teams that train here before descending to sea-level fixtures. The High Performance Centre makes that advantage accessible: residency weeks for national and emerging squads, pre-season camps for IPL franchises, and a specialist performance facility that no other cricket ground in India can replicate.',
+  F1: 'Every other product in this programme builds from scratch. The Foundation is different — it activates revenue the ground already controls. Box packages can be sold from Day 1. Naming rights and international match gate revenue come online from Year 2 as the programme matures. This is the base layer that de-risks the entire investment.',
+  P2: 'A standalone family entertainment centre positioned to serve Dharamshala\'s year-round visitor footfall. The ground provides the footfall; the FEC provides a reason to stay longer.',
+  P4: 'Delhi–Dharamshala is 45 minutes by air. The conference centre already exists and overlooks the Dhauladhar. The market it serves — corporate leadership retreats, team off-sites, strategy weekends — has run out of compelling venues. Goa is overdone. Udaipur is generic luxury. Dharamshala offers mountain air, altitude, cricket and altitude seclusion. The Corporate Retreat programme packages all of it.',
+  P5: 'The Pavilion Bar exists. The glass wall facing the Dhauladhar exists. The only missing ingredient is an operator with the ambition to open it 280 days a year and serve it properly. This product is a lease structure — fixed monthly fee plus revenue share — that gives HPCA income with zero operating cost or risk.',
+  P7: 'A cricket outfield under the Dhauladhar is one of the most dramatic event venues in India. Fifteen events a year — weddings, product launches, milestone dinners — each paying a venue hire that no hotel in the region can compete with on setting alone.',
+  P8: 'A founding membership tier that converts Dharamshala\'s most loyal followers — those who travel specifically for this ground — into a recurring revenue stream. Priority access to boxes, match tickets, training sessions and the Pavilion Bar. 200 founding members at ₹50,000 a year.'
+};
+
+// ── FULL-PAGE PRODUCT VIEW (P1 first) ────────────────────────────────────────
+function renderProductFull(code) {
+  var meta=META[code], on=S.toggles[code];
+  var ALL=['F1','P1','P3','P6','P2'];
+  var idx=ALL.indexOf(code), prev=ALL[idx>0?idx-1:ALL.length-1], next=ALL[idx<ALL.length-1?idx+1:0];
+  var heroBg=HERO_BG[code]||'#111', heroPat=HERO_PAT[code]||'';
+
+  var calcHTML = on
+    ? '<div class="pd-calc-hdr">Assumptions &amp; output · adjust live</div>'
+      +'<div class="pdbody">'
+        +'<div class="pdcol left"><div class="coltit">Assumptions</div>'+buildSliders(code)+'</div>'
+        +'<div class="pdcol right"><div class="coltit">Output</div>'+buildOutputCards(code)
+          +'<div class="coltit" style="margin-top:16px">5-year revenue &amp; EBITDA</div>'+buildYstrip(code)
+          +'<div class="coltit" style="margin-top:16px">Capital investment</div>'+buildCapex(code)
+        +'</div>'
+      +'</div>'
+    : '<div class="offst"><h3>'+meta.full+' is off</h3><p>Toggle on to see the model.</p></div>';
+
+  var pb=prodPayback(code);
+  var r1=rev1(code), tot5=rev5(code).reduce(function(s,v){return s+v;},0);
+  var cap=prodCapex(code);
+
+  document.getElementById('panel').innerHTML =
+    '<div class="pd">'
+    +'<div class="pdscroll">'
+
+      // ── HERO (tall) ──
+      +'<div class="pdhero-tall">'
+        +'<div class="pdhero-ph" style="background-color:'+heroBg+';background-image:'+heroPat+'"></div>'
+        +'<div class="pdhero-fade"></div>'
+        +'<div class="pdhero-bot">'
+          +'<div>'
+            +'<div class="pdhero-tag">'+code+' — '+meta.full+'</div>'
+            +'<div class="pdhero-tit">'+meta.name+'</div>'
+            +'<div class="pdhero-sub">'+meta.sub+'</div>'
+          +'</div>'
+          +'<div class="pdhero-tog">'
+            +'<span class="pdhero-togl">'+(on?'Active':'Inactive')+'</span>'
+            +'<div class="bigt '+(on?'on':'off')+'" id="pd-tog"><div class="bigtdot"></div></div>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+
+      // ── NARRATIVE ──
+      +'<div class="pd-narr">'
+        +'<div class="pd-narr-eyebrow">The experience</div>'
+        +'<div class="pd-narr-body">'+(NARRATIVE[code]||meta.sub)+'</div>'
+        +'<div class="pd-narr-facts">'
+          +'<div class="pd-nf"><div class="pd-nfl">Year 1 revenue</div><div class="pd-nfn">'+(on?fCr(r1):'—')+'</div></div>'
+          +'<div class="pd-nf"><div class="pd-nfl">5-year total</div><div class="pd-nfn">'+(on?fCr(tot5):'—')+'</div></div>'
+          +'<div class="pd-nf"><div class="pd-nfl">Capex</div><div class="pd-nfn">'+(cap?fCr(cap):'Shared / nil')+'</div></div>'
+          +'<div class="pd-nf"><div class="pd-nfl">Payback</div><div class="pd-nfn">'+(on&&pb?pb.toFixed(1)+' yrs':(cap?'—':'No capex'))+'</div></div>'
+        +'</div>'
+      +'</div>'
+
+      // ── SECOND IMAGE ──
+      +'<div class="pd-img2">'
+        +'<div class="pd-img2-ph" style="background-color:'+heroBg+';background-image:'+heroPat+'"></div>'
+        +'<div class="pd-img2-label">'
+          +'<div class="pd-img2-ring">&#9654;</div>'
+          +'<div class="pd-img2-cap">Reference image · '+meta.name+'</div>'
+        +'</div>'
+      +'</div>'
+
+      // ── CALCULATOR ──
+      +calcHTML
+
+    +'</div>'
+    +'<div class="pdfooter">'
+      +'<span class="pdnav" data-go="'+prev+'">← '+prev+' '+META[prev].name+'</span>'
+      +'<span class="pdhint">Sliders update live</span>'
+      +'<span class="pdnav" data-go="'+next+'">'+META[next].name+' '+next+' →</span>'
+    +'</div>'
+    +'</div>';
+
+  document.getElementById('pd-tog').addEventListener('click', function() {
+    S.toggles[code]=S.toggles[code]?0:1; render();
+  });
+  document.querySelectorAll('.pdnav[data-go]').forEach(function(el) {
+    el.addEventListener('click', function() { S.view=el.dataset.go; render(); });
+  });
+  attachSliders(function() {
+    var r1u=rev1(code), t5u=rev5(code).reduce(function(s,v){return s+v;},0), pbu=prodPayback(code), capu=prodCapex(code);
+    var nf=document.querySelectorAll('.pd-nfn');
+    if(nf.length>=4){
+      nf[0].textContent=on?fCr(r1u):'—';
+      nf[1].textContent=on?fCr(t5u):'—';
+      nf[3].textContent=on&&pbu?pbu.toFixed(1)+' yrs':(capu?'—':'No capex');
+    }
+    var right=document.querySelector('.pdcol.right');
+    if(right&&on){
+      right.innerHTML='<div class="coltit">Output</div>'+buildOutputCards(code)
+        +'<div class="coltit" style="margin-top:16px">5-year revenue &amp; EBITDA</div>'+buildYstrip(code)
+        +'<div class="coltit" style="margin-top:16px">Capital investment</div>'+buildCapex(code);
+    }
+  });
+}
+
 // ── HERO BG PER PRODUCT (placeholder colours — swap for real images) ──────────
 var HERO_BG = {
   F1:'#0d1010', P1:'#0e0d0b', P2:'#0b0e0b', P3:'#0b0d0f',
@@ -889,6 +1018,7 @@ function render() {
   renderSidebar();
   if (S.view==='overview')   renderOverview();
   else if (S.view==='PRECINCT') renderPrecinct();
+  else if (S.view==='P1')    renderProductFull('P1');
   else renderProduct(S.view);
 }
 
