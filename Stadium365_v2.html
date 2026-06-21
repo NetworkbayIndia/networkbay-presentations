@@ -576,7 +576,7 @@ function renderOverview() {
   var pPbH=pOn&&pPb!==null ? '<span class="cpb">'+pPb.toFixed(1)+' yr payback</span>' : '';
   var subCards=PRECINCT.map(function(c) {
     var on=S.toggles[c], rv=rev1(c);
-    return '<div class="pc-sub'+(on?'':' poff')+'" data-goto="PRECINCT">'
+    return '<div class="pc-sub'+(on?'':' poff')+'" data-goto="'+c+'">'
       +'<div class="psc">'+c+'</div>'
       +'<div class="psn">'+META[c].name+'</div>'
       +'<div class="psv">'+(on?fCr(rv):'—')+'</div>'
